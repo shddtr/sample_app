@@ -21,7 +21,9 @@ environment ENV.fetch("RAILS_ENV") { "development" }
 # Workers do not work on JRuby or Windows (both of which do not support
 # processes).
 #
-# workers ENV.fetch("WEB_CONCURRENCY") { 2 }
+workers Integer(ENV["WEB_CONCURRENCY"] || 2)
+threads_count = Integer(ENV['RAILS_MAX_THREADS'] || 5)
+threads threads_count, threads_count
 
 # Use the `preload_app!` method when specifying a `workers` number.
 # This directive tells Puma to first boot the application and load code
@@ -30,7 +32,11 @@ environment ENV.fetch("RAILS_ENV") { "development" }
 # you need to make sure to reconnect any threads in the `on_worker_boot`
 # block.
 #
-# preload_app!
+preload_app!
+
+rackup DefaultRackup
+port ENV['PORT'] || 3000
+environment ENV['RACK_ENV'] || 'development'
 
 # If you are preloading your application and using Active Record, it's
 # recommended that you close any connections to the database before workers
@@ -47,10 +53,9 @@ environment ENV.fetch("RAILS_ENV") { "development" }
 # or connections that may have been created at application boot, as Ruby
 # cannot share connections between processes.
 #
-# on_worker_boot do
-#   ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
-# end
-#
+on_worker_boot do
+  ActiveRecord::Base.establish_connection
+end
 
 # Allow puma to be restarted by `rails restart` command.
 plugin :tmp_restart
