@@ -14,6 +14,7 @@ class UsersController < ApplicationController
     # debugger
     @user = User.new(user_params)
     if @user.save
+      log_in(@user)
       # :successは慣習的
       flash[:success] = "Welcome to the Sample App!"
       # 以下のコードは等価
