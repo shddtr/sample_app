@@ -13,8 +13,8 @@ class User < ApplicationRecord
             uniqueness: {case_sensitive: false}
   has_secure_password
   # has_secure_passwordもpresenceの検査を行うが
-  # レコードの追加時のみ行うため、以下が必要
-  validates :password, presence: true, length: {minimum: 6}
+  # レコードの追加時のみ行うため、以下のpresenceが必要
+  validates :password, presence: true, length: {minimum: 6}, allow_nil: true
 
   def User.digest(string)
     cost = ActiveModel::SecurePassword.min_cost ? BCrypt::Engine::MIN_COST :
