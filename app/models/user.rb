@@ -1,5 +1,6 @@
 # coding: utf-8
 class User < ApplicationRecord
+  has_many :microposts, dependent: :destroy
   attr_accessor :remember_token
 
   # Userモデルの中では右式のselfを省略できる
@@ -37,5 +38,9 @@ class User < ApplicationRecord
 
   def forget
     update_attribute(:remember_digest, nil)
+  end
+
+  def feed
+    Micropost.where("user_id = ?", id)
   end
 end

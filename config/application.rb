@@ -1,3 +1,4 @@
+# coding: utf-8
 require_relative 'boot'
 
 require 'rails/all'
@@ -14,5 +15,7 @@ module SampleApp
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
+    # Railsチュートリアルにはない
+    config.autoload_paths += Dir[Rails.root.join('app', 'uploaders')]
   end
 end
