@@ -1,6 +1,22 @@
 # coding: utf-8
 class User < ApplicationRecord
   has_many :microposts, dependent: :destroy
+  # 以下のようにしないのは、
+  # user.relationships.xxxとしないため + user_id属性でないため
+  # has_many :relationships, dependent: :destroy
+  has_many :active_relationships,
+           class_name: "Relationship",
+           foreign_key: "follower_id",
+           dependent: :destroy
+  has_many :passive_relationships,
+           class_name: "Relationship",
+           foreign_key: "followed_id",
+           dependent: :destroy
+  # user.followingを使うため
+  # (:followingが:followedsの場合は、sourceは不要)
+  has_many :following, through: :active_relationships, source: :followed
+  # 以下のsourceは不要(followersがfollowerの複数形となっているため)
+  has_many :followers, through: :passive_relationships, source: :follower
   attr_accessor :remember_token, :activation_token, :reset_token
 
   # Userモデルの中では右式のselfを省略できる
@@ -43,7 +59,12 @@ class User < ApplicationRecord
   end
 
   def feed
-    Micropost.where("user_id = ?", id)
+    # following_idsはfollowing.map(&:id)と同じ。自動で生成される。
+    # Micropost.where("user_id IN (?) OR user_id = ?", following_ids, id)
+    following_ids = "SELECT followed_id FROM relationships
+                     WHERE follower_id = :user_id"
+    Micropost.where("user_id IN (#{following_ids}) OR user_id = :user_id",
+                    user_id: id)
   end
 
   def activate
@@ -70,6 +91,18 @@ class User < ApplicationRecord
 
   def password_reset_expired?
     reset_sent_at < 2.hours.ago
+  end
+
+  def follow(other_user)
+    active_relationships.create(followed_id: other_user.id)
+  end
+
+  def unfollow(other_user)
+    active_relationships.find_by(followed_id: other_user.id).destroy
+  end
+
+  def following?(other_user)
+    following.include?(other_user)
   end
 
   private
